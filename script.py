@@ -1,6 +1,8 @@
 
 import re
 import json
+import pandas as pd
+import datetime
 
 from typing import Any
 from pathlib import Path
@@ -84,6 +86,23 @@ def find_active_registers(data:Any) -> set[str]:
 
     return active_registers
 
+
+
+def make_dataframe(
+        transactions: list[dict[str, Any]]
+        ) -> pd.DataFrame:
+    """Convert a list of transaction dictionaries to a pandas DataFrame."""
+    df = pd.DataFrame(transactions)
+    df['timestamp'] = pd.to_datetime(
+        df['timestamp'],
+          format="%Y-%m-%d %H:%M:%S"
+    )
+    df.set_index("timestamp")
+    df.sort_index()
+    
+    return df
+
+
 def main() -> None:
     """Test the functions from task 1 & 2."""
     file_path = Path(
@@ -117,6 +136,10 @@ def main() -> None:
     active_registers = find_active_registers(config)
 
     print(f"Active registers: {sorted(active_registers)}")
+
+    #testing av df
+    df = make_dataframe(transactions)
+    print(df.head())
 
 if __name__ == "__main__":
     main()
