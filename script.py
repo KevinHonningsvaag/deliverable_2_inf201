@@ -70,14 +70,19 @@ def find_active_registers(data:Any) -> set[str]:
     active_registers: set[str] = set()
     if isinstance(data, dict):
         if data.get("active") is True:
-            register:id = data.get("id")
+            register_id = data.get("id")
 
             if isinstance(register_id, str):
                 active_registers.add(register_id)
 
+        for value in data.values():
+            active_registers.update(find_active_registers(value))
+
     elif isinstance(data, list):
+        for item in data:
+            active_registers.update(find_active_registers(item))
 
-
+    return active_registers
 
 def main() -> None:
     """Test the functions from task 1 & 2."""
@@ -103,6 +108,15 @@ def main() -> None:
         print(file_path)
 
     print(f"\nLog files found: {len(log_files)}")
+
+    config_path = Path("data/store_config.json")
+
+    with open(config_path, "r", encoding="utf-8") as file:
+        config = json.load(file)
+
+    active_registers = find_active_registers(config)
+
+    print(f"Active registers: {sorted(active_registers)}")
 
 if __name__ == "__main__":
     main()
