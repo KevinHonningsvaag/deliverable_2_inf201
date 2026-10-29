@@ -56,8 +56,8 @@ def parse_log(text: str) -> list[dict[str, str | float]]:
 
 def compute_refund_ratio(sales_count: np.ndarray, refund_count: np.ndarray) -> np.ndarray:
     """Calculate the ratio off how often a refund ocuorce"""
-    epsilion: float = le-6
-    return refund_count/(sales_count*epsilion)
+    epsilion: float = 1e-6
+    return refund_count/(sales_count+epsilion)
 
 
 def remove_price_outliers(price_data) -> np.ndarray:
@@ -166,6 +166,22 @@ def create_pivot_table(df: pd.DataFrame) -> pd.DataFrame:
 
     return pivot
 
+def refund_ratio_per_item(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate the refund ratio for each item."""
+
+    counts = df.groupby(["item", "status"]).size()
+    counts = counts.unstack(fill_value=0)
+    counts = counts.reindex(
+            columns=["SUCCESS", "REFUND", "CANCELLED"], 
+            fill_value=0
+        )
+    sales_count =counts["SUCCESS"].to_numpy()
+    refund_count = counts["REFUND"].to_numpy()
+    ratios = compute_refund_ratio(sales_count, refund_count)
+    counts["refund_ratio"] = ratios
+    
+    return counts
+
 def main() -> None:
     """Test the functions from task 1 & 2."""
     file_path = Path(
@@ -211,5 +227,9 @@ def main() -> None:
     #tester pivot
     pivot = create_pivot_table(df)
     print(pivot)
+
+    # Test oppgave 4.4
+    refund_ratios = refund_ratio_per_item(df)
+    print(refund_ratios)
 if __name__ == "__main__":
     main()
