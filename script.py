@@ -1,6 +1,8 @@
 
 import re
 import json
+import pandas as pd
+import datetime
 
 from typing import Any
 from pathlib import Path
@@ -120,6 +122,50 @@ def find_active_registers(data:Any) -> set[str]:
 
     return active_registers
 
+
+
+def make_dataframe(
+        transactions: list[dict[str, Any]]
+        ) -> pd.DataFrame:
+    """Convert a list of transaction dictionaries to a pandas DataFrame."""
+    df = pd.DataFrame(transactions)
+    df['timestamp'] = pd.to_datetime(
+        df['timestamp'],
+          format="%Y-%m-%d %H:%M:%S"
+    )
+    df = df.set_index("timestamp")
+    df = df.sort_index()
+    
+    return df
+
+def hourly_sales_per_item(df: pd.DataFrame) -> pd.DataFrame:
+    """Takes the DataFrame groups it by item and returns the sum of sales for the following hour"""
+    grouped =df.groupby('item')
+    hourly_sales = grouped.resample('1h')
+
+    result = hourly_sales['price'].sum()
+    #makes result in to a dataFrame
+    result = result.reset_index()
+    return result
+
+def create_pivot_table(df: pd.DataFrame) -> pd.DataFrame:
+    """ Creates a pivot table using the dataframe"""
+
+    pivot = df.pivot_table(
+        index="item",
+        columns="status",
+        values="price",
+        aggfunc="sum",
+        #To get 0 instead of NaN if there is any
+        fill_value=0
+    )
+    pivot = pivot.reindex(
+        columns=["SUCCESS", "REFUND", "CANCELLED"], 
+        fill_value=0
+        )
+
+    return pivot
+
 def main() -> None:
     """Test the functions from task 1 & 2."""
     file_path = Path(
@@ -154,5 +200,16 @@ def main() -> None:
 
     print(f"Active registers: {sorted(active_registers)}")
 
+    #testing av df
+    df = make_dataframe(transactions)
+    print(df)
+
+    #testing av timelig sortering
+    result = hourly_sales_per_item(df)
+    print(result)
+
+    #tester pivot
+    pivot = create_pivot_table(df)
+    print(pivot)
 if __name__ == "__main__":
     main()
