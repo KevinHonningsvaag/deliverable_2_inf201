@@ -97,10 +97,21 @@ def make_dataframe(
         df['timestamp'],
           format="%Y-%m-%d %H:%M:%S"
     )
-    df.set_index("timestamp")
-    df.sort_index()
+    df = df.set_index("timestamp")
+    df = df.sort_index()
     
     return df
+
+def hourly_sales_per_item(df: pd.DataFrame) -> pd.DataFrame:
+    """Takes the DataFrame groups it by item and returns the sum of sales for the following hour"""
+    grouped =df.groupby('item')
+    hourly_sales = grouped.resample('1h')
+
+    result = hourly_sales['price'].sum()
+    result = result.reset_index()
+    return result
+
+
 
 
 def main() -> None:
@@ -139,7 +150,10 @@ def main() -> None:
 
     #testing av df
     df = make_dataframe(transactions)
-    print(df.head())
+    print(df)
 
+    #testing av timelig sortering
+    result = hourly_sales_per_item(df)
+    print(result.head())
 if __name__ == "__main__":
     main()
