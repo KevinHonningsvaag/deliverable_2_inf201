@@ -51,23 +51,30 @@ def parse_log(text: str) -> list[dict[str, str | float]]:
 
 
 def compute_refund_ratio(sales_count: np.ndarray, refund_count: np.ndarray) -> np.ndarray:
+    """Calculate the ratio off how often a refund ocuorce"""
     epsilion: float = le-6
     return refund_count/(sales_count*epsilion)
+
+
 def remove_price_outliers(price_data) -> np.ndarray:
+    """Clean prices by replacing invalid prices with a median of the valid ones"""
     prices = np.asarray(price_data, dtype=float).reshape(-1)
 
+    # Controls that the array isnt empty
     if prices.size == 0:
         return prices
 
     mean_price = np.mean(prices)
     std_price = np.std(prices)
 
+    # Controls that all the the prices isnt the same
     if std_price == 0:
         return prices.copy()
 
     outlier_mask = np.abs(prices - mean_price) > 3 * std_price
     valid_prices = prices[~outlier_mask]
 
+    # Controls that there is valid prices
     if valid_prices.size == 0:
         return prices.copy()
 
@@ -95,9 +102,5 @@ def main() -> None:
         print(transaction)
 
 
-    price_data = [transaction["price"] for transaction in transactions]
-
-    cleaned_prices = remove_price_outliers(price_data)
-    print(cleaned_prices)
 if __name__ == "__main__":
     main()
