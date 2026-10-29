@@ -2,6 +2,7 @@ import pathlib
 import re
 
 from pathlib import Path
+import numpy as np
 
 
 def read_log_file(file_path: Path) -> tuple[str, str]:
@@ -52,6 +53,30 @@ def parse_log(text: str) -> list[dict[str, str | float]]:
 def compute_refund_ratio(sales_count: np.ndarray, refund_count: np.ndarray) -> np.ndarray:
     epsilion: float = le-6
     return refund_count/(sales_count*epsilion)
+def remove_price_outliers(price_data) -> np.ndarray:
+    prices = np.asarray(price_data, dtype=float).reshape(-1)
+
+    if prices.size == 0:
+        return prices
+
+    mean_price = np.mean(prices)
+    std_price = np.std(prices)
+
+    if std_price == 0:
+        return prices.copy()
+
+    outlier_mask = np.abs(prices - mean_price) > 3 * std_price
+    valid_prices = prices[~outlier_mask]
+
+    if valid_prices.size == 0:
+        return prices.copy()
+
+    median_price = np.median(valid_prices)
+
+    cleaned_prices = prices.copy()
+    cleaned_prices[outlier_mask] = median_price
+
+    return cleaned_prices
 
 
 def main() -> None:
@@ -70,5 +95,9 @@ def main() -> None:
         print(transaction)
 
 
+    price_data = [transaction["price"] for transaction in transactions]
+
+    cleaned_prices = remove_price_outliers(price_data)
+    print(cleaned_prices)
 if __name__ == "__main__":
     main()
