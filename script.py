@@ -1,6 +1,8 @@
-import pathlib
-import re
 
+import re
+import json
+
+from typing import Any
 from pathlib import Path
 import numpy as np
 
@@ -85,9 +87,41 @@ def remove_price_outliers(price_data) -> np.ndarray:
 
     return cleaned_prices
 
+def find_log_files(folder: Path) -> list[Path]:
+    """Recursively find all .log files in a directory."""
+    folder = Path(folder)
+    log_files: list[Path] = []
+
+    for item in folder.iterdir():
+        if item.is_dir():
+            log_files.extend(find_log_files(item))
+
+        elif item.is_file() and item.suffix == ".log":
+            log_files.append(item)
+
+    return log_files
+
+def find_active_registers(data:Any) -> set[str]:
+    """Recursively find all unique register IDs from the parsed log data."""
+    active_registers: set[str] = set()
+    if isinstance(data, dict):
+        if data.get("active") is True:
+            register_id = data.get("id")
+
+            if isinstance(register_id, str):
+                active_registers.add(register_id)
+
+        for value in data.values():
+            active_registers.update(find_active_registers(value))
+
+    elif isinstance(data, list):
+        for item in data:
+            active_registers.update(find_active_registers(item))
+
+    return active_registers
 
 def main() -> None:
-    """Test the functions from task 1."""
+    """Test the functions from task 1 & 2."""
     file_path = Path(
         "data/2026/library_cafe/POS_01/register_sales.log"
     )
@@ -101,6 +135,24 @@ def main() -> None:
     for transaction in transactions[:3]:
         print(transaction)
 
+     # Task 2.1: Recursively find all log files.
+    log_files = find_log_files(Path("data"))
+
+    print("\nLog file paths:")
+
+    for file_path in log_files:
+        print(file_path)
+
+    print(f"\nLog files found: {len(log_files)}")
+
+    config_path = Path("data/store_config.json")
+
+    with open(config_path, "r", encoding="utf-8") as file:
+        config = json.load(file)
+
+    active_registers = find_active_registers(config)
+
+    print(f"Active registers: {sorted(active_registers)}")
 
 if __name__ == "__main__":
     main()
