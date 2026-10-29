@@ -50,6 +50,9 @@ def parse_log(text: str) -> list[dict[str, str | float]]:
     return transactions
 
 
+def compute_refund_ratio(sales_count: np.ndarray, refund_count: np.ndarray) -> np.ndarray:
+    epsilion: float = le-6
+    return refund_count/(sales_count*epsilion)
 def remove_price_outliers(price_data) -> np.ndarray:
     prices = np.asarray(price_data, dtype=float).reshape(-1)
 
