@@ -1,26 +1,24 @@
-
-import re
 import json
-import pandas as pd
-import datetime
-
-from typing import Any
+import re
 from pathlib import Path
+from typing import Any
+
 import numpy as np
+import pandas as pd
 
 
 def read_log_file(file_path: Path) -> tuple[str, str]:
     """Read a log file and return its content and encoding."""
     try:
-    # Try to read the file with UTF-8
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        return content, 'utf-8'
+        # Try to read the file with UTF-8
+        with open(file_path, "r", encoding="utf-8") as file:
+            content = file.read()
+        return content, "utf-8"
     except UnicodeDecodeError:
         # If decoding with UTF-8 fails, try Latin-1
-        with open(file_path, 'r', encoding='latin-1') as f:
-            content = f.read()
-        return content, 'latin-1'
+        with open(file_path, "r", encoding="latin-1") as file:
+            content = file.read()
+        return content, "latin-1"
 
 
 def parse_log(text: str) -> list[dict[str, str | float]]:
@@ -54,14 +52,18 @@ def parse_log(text: str) -> list[dict[str, str | float]]:
     return transactions
 
 
-def compute_refund_ratio(sales_count: np.ndarray, refund_count: np.ndarray) -> np.ndarray:
+def compute_refund_ratio(
+    sales_count: np.ndarray,
+    refund_count: np.ndarray,
+) -> np.ndarray:
     """Calculate the ratio off how often a refund ocuorce"""
-    epsilion: float = 1e-6
-    return refund_count/(sales_count+epsilion)
+    epsilon: float = 1e-6
+    return refund_count / (sales_count + epsilon)
 
 
-def remove_price_outliers(price_data) -> np.ndarray:
-    """Clean prices by replacing invalid prices with a median of the valid ones"""
+def remove_price_outliers(price_data: np.ndarray) -> np.ndarray:
+    """Clean prices by replacing invalid prices with a median of the
+    valid ones"""
     prices = np.asarray(price_data, dtype=float).reshape(-1)
 
     # Controls that the array isnt empty
@@ -89,6 +91,7 @@ def remove_price_outliers(price_data) -> np.ndarray:
 
     return cleaned_prices
 
+
 def find_log_files(folder: Path) -> list[Path]:
     """Recursively find all .log files in a directory."""
     folder = Path(folder)
@@ -103,7 +106,8 @@ def find_log_files(folder: Path) -> list[Path]:
 
     return log_files
 
-def find_active_registers(data:Any) -> set[str]:
+
+def find_active_registers(data: Any) -> set[str]:
     """Recursively find all unique register IDs from the parsed log data."""
     active_registers: set[str] = set()
     if isinstance(data, dict):
@@ -123,113 +127,127 @@ def find_active_registers(data:Any) -> set[str]:
     return active_registers
 
 
-
 def make_dataframe(
-        transactions: list[dict[str, Any]]
-        ) -> pd.DataFrame:
+    transactions: list[dict[str, Any]],
+) -> pd.DataFrame:
     """Convert a list of transaction dictionaries to a pandas DataFrame."""
     df = pd.DataFrame(transactions)
     df['timestamp'] = pd.to_datetime(
         df['timestamp'],
-          format="%Y-%m-%d %H:%M:%S"
+        format="%Y-%m-%d %H:%M:%S",
     )
-    df = df.set_index("timestamp")
+    df = df.set_index('timestamp')
     df = df.sort_index()
-    
+
     return df
 
+
 def hourly_sales_per_item(df: pd.DataFrame) -> pd.DataFrame:
-    """Takes the DataFrame groups it by item and returns the sum of sales for the following hour"""
-    grouped =df.groupby('item')
-    hourly_sales = grouped.resample('1h')
+    """Takes the DataFrame groups it by item and returns the sum of sales
+    for the following hour"""
+    grouped = df.groupby('item')
+    hourly_sales = grouped.resample("1h")
 
     result = hourly_sales['price'].sum()
-    #makes result in to a dataFrame
+    # makes result in to a dataFrame
     result = result.reset_index()
     return result
 
+
 def create_pivot_table(df: pd.DataFrame) -> pd.DataFrame:
-    """ Creates a pivot table using the dataframe"""
+    """Creates a pivot table using the dataframe"""
 
     pivot = df.pivot_table(
-        index="item",
-        columns="status",
-        values="price",
+        index='item',
+        columns='status',
+        values='price',
         aggfunc="sum",
-        #To get 0 instead of NaN if there is any
-        fill_value=0
+        # To get 0 instead of NaN if there is any
+        fill_value=0,
     )
     pivot = pivot.reindex(
-        columns=["SUCCESS", "REFUND", "CANCELLED"], 
-        fill_value=0
-        )
+        columns=['SUCCESS', 'REFUND', 'CANCELLED'],
+        fill_value=0,
+    )
 
     return pivot
+
 
 def refund_ratio_per_item(df: pd.DataFrame) -> pd.DataFrame:
     """Calculate the refund ratio for each item."""
 
-    counts = df.groupby(["item", "status"]).size()
+    counts = df.groupby(['item', 'status']).size()
     counts = counts.unstack(fill_value=0)
     counts = counts.reindex(
-            columns=["SUCCESS", "REFUND", "CANCELLED"], 
-            fill_value=0
-        )
-    sales_count =counts["SUCCESS"].to_numpy()
-    refund_count = counts["REFUND"].to_numpy()
+        columns=['SUCCESS', 'REFUND', 'CANCELLED'],
+        fill_value=0,
+    )
+    sales_count = counts['SUCCESS'].to_numpy()
+    refund_count = counts['REFUND'].to_numpy()
     ratios = compute_refund_ratio(sales_count, refund_count)
-    counts["refund_ratio"] = ratios
-    
+    counts['refund_ratio'] = ratios
+
     return counts
 
+
 def main() -> None:
-    """Test the functions from task 1 & 2."""
-    file_path = Path(
-        "data/2026/library_cafe/POS_01/register_sales.log"
-    )
+    base_dir = Path(__file__).resolve().parent
+    data_dir = base_dir / "data"
+    config_path = data_dir / "store_config.json"
 
-    content, encoding = read_log_file(file_path)
-    transactions = parse_log(content)
-
-    print(f"Encoding: {encoding}")
-    print(f"Transactions found: {len(transactions)}")
-
-    for transaction in transactions[:3]:
-        print(transaction)
-
-     # Task 2.1: Recursively find all log files.
-    log_files = find_log_files(Path("data"))
-
-    print("\nLog file paths:")
-
-    for file_path in log_files:
-        print(file_path)
-
-    print(f"\nLog files found: {len(log_files)}")
-
-    config_path = Path("data/store_config.json")
+    log_files = find_log_files(data_dir)
 
     with open(config_path, "r", encoding="utf-8") as file:
         config = json.load(file)
 
     active_registers = find_active_registers(config)
 
-    print(f"Active registers: {sorted(active_registers)}")
+    transactions: list[dict[str, Any]] = []
 
-    #testing av df
+    for log_file in log_files:
+        content, encoding = read_log_file(log_file)
+        parsed_transactions = parse_log(content)
+        transactions.extend(parsed_transactions)
+
+        print(f"Read {log_file.name} using {encoding}:")
+        print(f"{len(parsed_transactions)} transactions")
+
+    transactions = [
+        transaction
+        for transaction in transactions
+        if transaction["register_id"] in active_registers
+    ]
+
     df = make_dataframe(transactions)
-    print(df)
 
-    #testing av timelig sortering
-    result = hourly_sales_per_item(df)
-    print(result)
+    df['price'] = remove_price_outliers(df['price'].to_numpy())
 
-    #tester pivot
-    pivot = create_pivot_table(df)
-    print(pivot)
+    nok_mask = df['currency'] == "NOK"
+    df.loc[nok_mask, 'price'] *= 10.0
 
-    # Test oppgave 4.4
+    hourly_revenue = hourly_sales_per_item(df)
+    hourly_revenue['price'] = hourly_revenue['price'].round(2)
+    status_pivot = create_pivot_table(df).round(2)
     refund_ratios = refund_ratio_per_item(df)
-    print(refund_ratios)
+
+    item_refund_ratios = refund_ratios[['refund_ratio']]
+
+    df.to_csv(base_dir / "cleaned_transactions.csv")
+
+    hourly_revenue.to_json(
+        base_dir / "hourly_revenue.json",
+        orient="records",
+        date_format="iso",
+        indent=2,
+    )
+    status_pivot.to_csv(base_dir / "status_pivot_table.csv")
+    item_refund_ratios.to_csv(base_dir / "item_refund_ratios.csv")
+
+    print("\nWorkflow completed")
+    print(f"Log files found: {len(log_files)}")
+    print(f"Active registers: {sorted(active_registers)}")
+    print(f"Transactions processed: {len(df)}")
+
+
 if __name__ == "__main__":
     main()
