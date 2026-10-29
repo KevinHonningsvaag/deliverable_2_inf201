@@ -4,6 +4,7 @@ import json
 
 from typing import Any
 from pathlib import Path
+import numpy as np
 
 
 def read_log_file(file_path: Path) -> tuple[str, str]:
@@ -50,6 +51,41 @@ def parse_log(text: str) -> list[dict[str, str | float]]:
 
     return transactions
 
+
+def compute_refund_ratio(sales_count: np.ndarray, refund_count: np.ndarray) -> np.ndarray:
+    """Calculate the ratio off how often a refund ocuorce"""
+    epsilion: float = le-6
+    return refund_count/(sales_count*epsilion)
+
+
+def remove_price_outliers(price_data) -> np.ndarray:
+    """Clean prices by replacing invalid prices with a median of the valid ones"""
+    prices = np.asarray(price_data, dtype=float).reshape(-1)
+
+    # Controls that the array isnt empty
+    if prices.size == 0:
+        return prices
+
+    mean_price = np.mean(prices)
+    std_price = np.std(prices)
+
+    # Controls that all the the prices isnt the same
+    if std_price == 0:
+        return prices.copy()
+
+    outlier_mask = np.abs(prices - mean_price) > 3 * std_price
+    valid_prices = prices[~outlier_mask]
+
+    # Controls that there is valid prices
+    if valid_prices.size == 0:
+        return prices.copy()
+
+    median_price = np.median(valid_prices)
+
+    cleaned_prices = prices.copy()
+    cleaned_prices[outlier_mask] = median_price
+
+    return cleaned_prices
 
 def find_log_files(folder: Path) -> list[Path]:
     """Recursively find all .log files in a directory."""
