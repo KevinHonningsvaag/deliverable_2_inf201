@@ -1,0 +1,53 @@
+*   697e66b - KevinHonningsvaag, 14 hours ago : Merge pull request #21 from KevinHonningsvaag/20/feature/complete_main
+|\  
+| * 38e2d7f - Kevin, 14 hours ago : Main done
+|/  
+*   ce78737 - herman-nordstrand, 20 hours ago : Merge pull request #19 from KevinHonningsvaag/17/feature/refund_ratio_per_item
+|\  
+| * 44f51b8 - Herman Nordstrand, 20 hours ago : Created refund ratio per item function so that we can calculate the ratio per item
+|/  
+*   cd9078b - herman-nordstrand, 22 hours ago : Merge pull request #18 from KevinHonningsvaag/11/feature/data_analysis_pandas
+|\  
+| *   f83658c - herman-nordstrand, 22 hours ago : Merge pull request #16 from KevinHonningsvaag/15/feature/pivot_table
+| |\  
+| | * dedfcbc - Herman Nordstrand, 22 hours ago : Created a pivot table function
+| | * 589c3f7 - Herman Nordstrand, 22 hours ago : finished 4.1 and .2
+| |/  
+| * 3f867ff - Herman Nordstrand, 2 days ago : now sorts in chronoligical order. thanks to set and sort index
+* |   0344241 - KevinHonningsvaag, 22 hours ago : Merge pull request #14 from KevinHonningsvaag/6/feature/task_3
+|\ \  
+| |/  
+|/|   
+| *   5f20aa0 - KevinHonningsvaag, 22 hours ago : Merge branch 'main' into 6/feature/task_3
+| |\  
+| |/  
+|/|   
+* |   23d2c2b - herman-nordstrand, 2 days ago : Merge pull request #10 from KevinHonningsvaag/3/feature/recursive_directory_search
+|\ \  
+| * | 9f48eee - Herman Nordstrand, 2 days ago : fixed the doc string for a more accurate description
+| * | 557286c - Herman Nordstrand, 3 days ago : Started to add some functions for task 2
+|/ /  
+| * 9212540 - Kevin, 22 hours ago : Task 3 done
+| *   11fde1b - KevinHonningsvaag, 23 hours ago : Merge pull request #13 from KevinHonningsvaag/8/feature/compute_refund
+| |\  
+| | *   52b678b - KevinHonningsvaag, 23 hours ago : Merge branch '6/feature/task_3' into 8/feature/compute_refund
+| | |\  
+| | |/  
+| |/|   
+| * | d32d2ed - KevinHonningsvaag, 3 days ago : Merge pull request #9 from KevinHonningsvaag/7/feature/remove_price_outliers
+|/| | 
+| * | fe58e8c - Kevin, 3 days ago : cleaned prices
+|/ /  
+| * 8e3e3e6 - Kevin, 34 hours ago : compute refund ratio function
+|/  
+*   bc2ccad - herman-nordstrand, 3 days ago : Merge pull request #3 from KevinHonningsvaag/1/feature/file_reader_function
+|\  
+| * f94a81b - Herman Nordstrand, 4 days ago : Created functions for reading the generated files And added functions to read the files and return the data in a dictionary format. with re
+* |   f18eafe - herman-nordstrand, 3 days ago : Merge pull request #4 from KevinHonningsvaag/2/fix/data_path
+|\ \  
+| |/  
+|/|   
+| * db8beb7 - Herman Nordstrand, 5 days ago : Rewrote th path to fix the issue with the data path in the generate_data_for_d2.py script. Added a new configuration file store_config.json to manage data storage settings.
+|/  
+* ab45318 - Kevin, 11 days ago : Base
+* 708a9fd - KevinHonningsvaag, 11 days ago : Initial commit
